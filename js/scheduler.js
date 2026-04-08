@@ -137,7 +137,6 @@ const Scheduler = (() => {
     let prev = null;
 
     // Collect all unique event times
-    const events = [...new Set(procs.map(p => p.at))].sort((a, b) => a - b);
     const maxTime = procs.reduce((s, p) => s + p.bt, 0) +
                     Math.max(...procs.map(p => p.at));
 
@@ -172,19 +171,26 @@ const Scheduler = (() => {
         .filter(q => q.at > time && !q.finished)
         .map(q => q.at);
       const nextArrival = arrivals.length ? Math.min(...arrivals) : Infinity;
-      const runUntil = Math.min(time + p.remaining, nextArrival);
-      const runFor  = runUntil - time;
+      const nextArrivalTime = Math.min(
+        ...procs.filter(q => q.at > time && !q.finished).map(q => q.at),
+        Infinity
+      );
 
-      // Add gantt segment
-      const last = gantt[gantt.length - 1];
-      if (last && last.pid === p.pid) {
-        last.end = runUntil;
-      } else {
-        gantt.push({ pid: p.pid, start: time, end: runUntil });
-      }
+// simulate step by step instead of jumping blindly
+// Run only 1 unit at a time (CRITICAL for SRTF)
+const runFor = 1;
+const runUntil = time + 1;
 
-      p.remaining -= runFor;
-      time = runUntil;
+// Add gantt segment
+const last = gantt[gantt.length - 1];
+if (last && last.pid === p.pid) {
+  last.end = runUntil;
+} else {
+  gantt.push({ pid: p.pid, start: time, end: runUntil });
+}
+
+p.remaining -= runFor;
+time = runUntil;
 
       if (p.remaining === 0) {
         p.ct = time;
@@ -356,12 +362,20 @@ const Scheduler = (() => {
       time = runEnd;
 
       // Enqueue newly arrived processes during this slice
-      procs.forEach((q, i) => {
-        if (!q.finished && !inQueue[i] && q.at <= time && i !== idx) {
-          queue.push(i);
-          inQueue[i] = true;
+    // Enqueue newly arrived processes in correct order
+// Enqueue newly arrived processes in correct FIFO order
+      const arrived = [];
+
+      for (let i = 0; i < n; i++) {
+        if (!procs[i].finished && procs[i].at > (time - runFor) && procs[i].at <= time) {
+          arrived.push(i);
         }
-      });
+      }
+
+      // maintain arrival order
+      arrived.sort((a, b) => procs[a].at - procs[b].at);
+
+      arrived.forEach(i => queue.push(i));
 
       if (p.remaining === 0) {
         p.ct = time;
