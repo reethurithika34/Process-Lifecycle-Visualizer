@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OS Process Lifecycle Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css">
+
+<script src="js/main.js"></script>
+<script src="js/scheduler.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/visualization.js"></script>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <div class="header-glow"></div>
+    <div class="header-inner">
+      <div class="logo-mark">
+        <span class="logo-bracket">[</span>
+        <span class="logo-cpu">CPU</span>
+        <span class="logo-bracket">]</span>
+      </div>
+      <div class="header-text">
+        <h1 class="site-title">OS Process Lifecycle Visualizer</h1>
+        <p class="site-subtitle">Real-time CPU Scheduling Algorithm Simulator</p>
+      </div>
+      <div class="header-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label" id="statusLabel">IDLE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN LAYOUT ===== -->
+  <main class="main-layout">
+
+    <!-- LEFT PANEL: Controls -->
+    <aside class="control-panel" id="controlPanel">
+
+      <!-- Scheduling Type -->
+      <div class="panel-card">
+        <div class="card-label">SCHEDULING TYPE</div>
+        <div class="toggle-group">
+          <button class="toggle-btn active" id="btnPreemptive" data-type="preemptive">Preemptive</button>
+          <button class="toggle-btn" id="btnNonPreemptive" data-type="nonpreemptive">Non-Preemptive</button>
+        </div>
+      </div>
+
+      <!-- Algorithm Selection -->
+      <div class="panel-card">
+        <div class="card-label">ALGORITHM</div>
+        <div class="algo-list" id="algoList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Time Quantum (RR only) -->
+      <div class="panel-card" id="quantumCard" style="display:none;">
+        <div class="card-label">TIME QUANTUM</div>
+        <input class="form-input" type="number" id="timeQuantum" min="1" value="2" placeholder="Quantum" />
+      </div>
+
+      <!-- Process Input Form -->
+      <div class="panel-card">
+        <div class="card-label">ADD PROCESS</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Arrival Time</label>
+            <input class="form-input" type="number" id="inputAT" min="0" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Burst Time</label>
+            <input class="form-input" type="number" id="inputBT" min="1" placeholder="1" />
+          </div>
+          <div class="form-group" id="priorityGroup" style="display:none;">
+            <label class="form-label">Priority</label>
+            <input class="form-input" type="number" id="inputPriority" min="1" placeholder="1" />
+          </div>
+        </div>
+        <button class="btn btn-add" id="btnAddProcess">+ Add Process</button>
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+
+      <!-- Process Queue List -->
+      <div class="panel-card">
+        <div class="card-label">PROCESS QUEUE <span class="count-badge" id="processCount">0</span></div>
+        <div class="process-list" id="processList">
+          <div class="empty-state">No processes added yet.</div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-run" id="btnRun" disabled>Run Simulation</button>
+          <button class="btn btn-clear" id="btnClear">Clear All</button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT PANEL: Visualization -->
+    <section class="viz-panel" id="vizPanel">
+
+      <!-- Lifecycle States -->
+      <div class="lifecycle-grid" id="lifecycleGrid">
+        <div class="state-card state-ready">
+          <div class="state-header">
+            <div class="state-dot dot-ready"></div>
+            <span>Ready Queue</span>
+          </div>
+          <div class="state-body" id="readyQueue"></div>
+        </div>
+        <div class="state-card state-running">
+          <div class="state-header">
+            <div class="state-dot dot-running"></div>
+            <span>Running</span>
+          </div>
+          <div class="state-body" id="runningProcess"></div>
+        </div>
+        <div class="state-card state-waiting">
+          <div class="state-header">
+            <div class="state-dot dot-waiting"></div>
+            <span>Waiting</span>
+          </div>
+          <div class="state-body" id="waitingQueue"></div>
+        </div>
+        <div class="state-card state-terminated">
+          <div class="state-header">
+            <div class="state-dot dot-terminated"></div>
+            <span>Terminated</span>
+          </div>
+          <div class="state-body" id="terminatedList"></div>
+        </div>
+      </div>
+
+      <!-- Clock Display -->
+      <div class="clock-bar">
+        <div class="clock-inner">
+          <span class="clock-label">SYSTEM TIME</span>
+          <span class="clock-value" id="clockDisplay">T = 0</span>
+          <div class="sim-controls">
+            <button class="sim-btn" id="btnPause" disabled>Pause</button>
+            <button class="sim-btn" id="btnStep" disabled>Step</button>
+            <button class="sim-btn" id="btnReset" disabled>Reset</button>
+          </div>
+          <div class="speed-control">
+            <label class="form-label">Speed</label>
+            <input type="range" id="speedSlider" min="100" max="2000" value="800" step="100" />
+            <span id="speedValue">800ms</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gantt Chart -->
+      <div class="panel-card gantt-card" id="ganttCard" style="display:none;">
+        <div class="card-label">GANTT CHART</div>
+        <div class="gantt-scroll">
+          <div class="gantt-chart" id="ganttChart"></div>
+          <div class="gantt-timeline" id="ganttTimeline"></div>
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="panel-card results-card" id="resultsCard" style="display:none;">
+        <div class="card-label">RESULTS TABLE</div>
+        <div class="table-scroll">
+          <table class="results-table" id="resultsTable">
+            <thead>
+              <tr>
+                <th>PID</th>
+                <th>AT</th>
+                <th>BT</th>
+                <th>CT</th>
+                <th>TAT</th>
+                <th>WT</th>
+                <th>RT</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+        <div class="averages-row" id="averagesRow"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/scheduler.js"></script>
+  <script src="js/visualization.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
