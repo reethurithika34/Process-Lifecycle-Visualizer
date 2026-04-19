@@ -41,20 +41,59 @@
   // ============================================================
   // Initialization
   // ============================================================
+  
   function init() {
-    // Render default algorithm list (preemptive)
-    UI.renderAlgoList(schedulingType, onAlgoSelected);
 
-    // Auto-select first algorithm
-    const firstAlgo = schedulingType === 'preemptive'
-      ? { key: 'SRTF', needsPriority: false }
-      : { key: 'FCFS', needsPriority: false };
-    UI.selectAlgo(firstAlgo.key, firstAlgo.needsPriority);
-    selectedAlgo  = firstAlgo.key;
-    needsPriority = firstAlgo.needsPriority;
+  const params = new URLSearchParams(window.location.search);
+  const urlType = params.get('type');
+  const urlAlgo = params.get('algo');
 
-    bindEvents();
+  console.log("TYPE:", urlType);
+  console.log("ALGO:", urlAlgo);
+
+  if (urlType) {
+  const fixedType = urlType.replace('-', ''); // 🔥 FIX
+  setSchedulingType(fixedType);
+} else {
+  setSchedulingType('preemptive');
+}
+
+  // 👇 KEEP YOUR ALGO MAPPING CODE HERE
+  const algos = {
+    preemptive: [
+      { key: 'SRTF', needsPriority: false },
+      { key: 'PriorityP', needsPriority: true },
+      { key: 'RoundRobin', needsPriority: false }
+    ],
+    nonpreemptive: [
+      { key: 'FCFS', needsPriority: false },
+      { key: 'SJF', needsPriority: false },
+      { key: 'PriorityNP', needsPriority: true }
+    ]
+  };
+
+  if (urlAlgo) {
+    const algoMap = {
+      rr: 'RoundRobin',
+      fcfs: 'FCFS',
+      sjf: 'SJF',
+      priorityp: 'PriorityP',
+      prioritynp: 'PriorityNP'
+    };
+
+    const finalAlgo = algoMap[urlAlgo.toLowerCase()] || urlAlgo;
+
+    const selected = algos[schedulingType].find(a => a.key === finalAlgo);
+
+    if (selected) {
+      UI.selectAlgo(selected.key, selected.needsPriority);
+      selectedAlgo = selected.key;
+      needsPriority = selected.needsPriority;
+    }
   }
+
+  bindEvents();
+}
 
   // ============================================================
   // Event Binding
@@ -121,14 +160,7 @@
 
     // Re-render algo list; auto-select first
     UI.renderAlgoList(type, onAlgoSelected);
-    const algos = {
-      preemptive:    { key: 'SRTF',  needsPriority: false },
-      nonpreemptive: { key: 'FCFS',  needsPriority: false }
-    };
-    const def = algos[type];
-    UI.selectAlgo(def.key, def.needsPriority);
-    selectedAlgo  = def.key;
-    needsPriority = def.needsPriority;
+    
   }
 
   // ============================================================

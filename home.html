@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simulation Setup</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/style.css">
+
+  <style>
+    body {
+  margin: 0;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #0a0c10;   /* FIX: dark background */
+  color: #e8edf5;
+
+  font-family: 'Share Tech Mono', monospace;
+}
+
+    .container {
+  width: 600px;
+  padding: 40px;
+
+  border: 1px solid rgba(0, 229, 192, 0.2);
+  border-radius: 14px;
+
+  background: #141820;
+
+  box-shadow: 0 0 40px rgba(0,0,0,0.8);
+
+  text-align: center;
+}
+
+    h1 {
+      color: #00e5c0;;
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+    }
+
+    h2 {
+      margin-top: 25px;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+.btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);  /* subtle border */
+  color: #e8edf5;
+  font-family: var(--font-mono);
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 10px 18px;
+}
+
+.btn:hover {
+  border-color: #00e5c0;
+  color: #00e5c0;
+}
+
+    .selected {
+  background: rgba(0, 229, 192, 0.08);   /* very light bg (almost transparent) */
+  border: 1px solid #00e5c0;             /* visible neon border */
+  color: #00e5c0;                        /* text becomes green */
+  box-shadow: 0 0 10px rgba(0, 229, 192, 0.4); /* glow */
+}
+.selected:hover {
+  box-shadow: 0 0 16px rgba(0, 229, 192, 0.6);
+}
+
+    .start-btn {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  padding: 12px 24px;
+  border-radius: 8px;
+
+  background: #00e5c0;   /* green button */
+  color: #0a0c10;        /* DARK text → visible */
+
+  border: none;
+  cursor: pointer;
+
+  box-shadow: 0 0 12px rgba(0, 229, 192, 0.4);
+  transition: all 0.25s ease;
+  margin-top: 30px;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+#algo-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;   /* allows next line if needed */
+  gap: 16px;         /* 🔥 THIS adds spacing */
+  margin-top: 15px;
+}
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>OS Process Lifecycle Visualizer</h1>
+    <p>Select configuration before starting simulation</p>
+
+    <h2>Scheduling Type</h2>
+<button class="btn type" onclick="setType(this, 'preemptive')">Preemptive</button>
+<button class="btn type" onclick="setType(this, 'non-preemptive')">Non-Preemptive</button>
+
+<div id="algo-section" style="display: none;">
+  <h2>Algorithm</h2>
+  <div id="algo-container"></div>
+</div>
+<br>
+<button class="start-btn" onclick="startSimulation()">Start Simulation</button>
+  </div>
+
+  <script>
+    let type = "";
+    let algo = "";
+
+    function setType(btn, t) {
+  type = t;
+
+  // ONLY remove selection from type buttons
+  document.querySelectorAll(".btn.type")
+    .forEach(b => b.classList.remove("selected"));
+
+  btn.classList.add("selected");
+
+  document.getElementById("algo-section").style.display = "block";
+
+  loadAlgorithms();
+}
+    function loadAlgorithms() {
+  const container = document.getElementById("algo-container");
+  container.innerHTML = "";
+
+  let algorithms = [];
+
+  if (type === "preemptive") {
+    algorithms = [
+      { name: "SRTF", value: "SRTF" },
+      { name: "Priority (Preemptive)", value: "PriorityP" },
+      { name: "Round Robin", value: "RoundRobin" }
+    ];
+  } else {
+    algorithms = [
+      { name: "FCFS", value: "FCFS" },
+      { name: "SJF", value: "SJF" },
+      { name: "Priority (Non-Preemptive)", value: "PriorityNP" }
+    ];
+  }
+
+  algorithms.forEach(a => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.innerText = a.name;
+
+    btn.onclick = () => setAlgo(btn, a.value);
+
+    container.appendChild(btn);
+  });
+}
+
+    function setAlgo(btn, a) {
+  algo = a;
+
+  // ONLY remove from algorithm buttons
+  document.querySelectorAll("#algo-container .btn")
+    .forEach(b => b.classList.remove("selected"));
+
+  btn.classList.add("selected");
+}
+
+    function startSimulation() {
+      if (!type || !algo) {
+        alert("Please select both options!");
+        return;
+      }
+      window.location.href = `index.html?type=${type}&algo=${algo}`;
+    }
+  </script>
+
+</body>
+</html>
