@@ -110,28 +110,28 @@
             <div class="state-dot dot-ready"></div>
             <span>Ready Queue</span>
           </div>
-          <div class="state-body" id="readyQueue"></div>
+          <div class="state-body" id="readyQueue"><div class="empty-state">Empty / Idle</div></div>
         </div>
         <div class="state-card state-running">
           <div class="state-header">
             <div class="state-dot dot-running"></div>
             <span>Running</span>
           </div>
-          <div class="state-body" id="runningProcess"></div>
+          <div class="state-body" id="runningProcess"><div class="empty-state">Empty / Idle</div></div>
         </div>
         <div class="state-card state-waiting">
           <div class="state-header">
             <div class="state-dot dot-waiting"></div>
             <span>Waiting</span>
           </div>
-          <div class="state-body" id="waitingQueue"></div>
+          <div class="state-body" id="waitingQueue"><div class="empty-state">Empty / Idle</div></div>
         </div>
         <div class="state-card state-terminated">
           <div class="state-header">
             <div class="state-dot dot-terminated"></div>
             <span>Terminated</span>
           </div>
-          <div class="state-body" id="terminatedList"></div>
+          <div class="state-body" id="terminatedList"><div class="empty-state">Empty / Idle</div></div>
         </div>
       </div>
 
@@ -169,13 +169,13 @@
           <table class="results-table" id="resultsTable">
             <thead>
               <tr>
-                <th>PID</th>
-                <th>AT</th>
-                <th>BT</th>
-                <th>CT</th>
-                <th>TAT</th>
-                <th>WT</th>
-                <th>RT</th>
+                <th title="Process ID">PID</th>
+                <th title="Arrival Time">AT<br><span class="th-sub">Arrival</span></th>
+                <th title="Burst Time">BT<br><span class="th-sub">Burst</span></th>
+                <th title="Completion Time">CT<br><span class="th-sub">Completion</span></th>
+                <th title="Turnaround Time">TAT<br><span class="th-sub">Turnaround</span></th>
+                <th title="Waiting Time">WT<br><span class="th-sub">Waiting</span></th>
+                <th title="Response Time">RT<br><span class="th-sub">Response</span></th>
               </tr>
             </thead>
             <tbody id="resultsBody"></tbody>
@@ -192,5 +192,6 @@
   <script src="js/visualization.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/webgl-bg.js"></script>
 </body>
 </html>

@@ -16,14 +16,14 @@ const UI = (() => {
   // -------------------------------------------------------
   const ALGORITHMS = {
     preemptive: [
-      { key: 'SRTF',       label: 'SRTF (Shortest Remaining Time First)', needsPriority: false },
-      { key: 'PriorityP',  label: 'Priority (Preemptive)',                needsPriority: true  },
+      { key: 'SRTF',       label: 'SRTF — Shortest Remaining Time First', needsPriority: false },
+      { key: 'PriorityP',  label: 'Priority — Preemptive',                needsPriority: true  },
       { key: 'RoundRobin', label: 'Round Robin',                          needsPriority: false }
     ],
     nonpreemptive: [
-      { key: 'FCFS',       label: 'FCFS (First Come First Served)',        needsPriority: false },
-      { key: 'SJF',        label: 'SJF (Shortest Job First)',              needsPriority: false },
-      { key: 'PriorityNP', label: 'Priority (Non-Preemptive)',             needsPriority: true  }
+      { key: 'FCFS',       label: 'FCFS — First Come First Served',        needsPriority: false },
+      { key: 'SJF',        label: 'SJF — Shortest Job First',              needsPriority: false },
+      { key: 'PriorityNP', label: 'Priority — Non-Preemptive',             needsPriority: true  }
     ]
   };
 
@@ -167,19 +167,19 @@ const UI = (() => {
 
     const avgRow = document.getElementById('averagesRow');
     avgRow.innerHTML = `
-      <div class="avg-item">
+      <div class="stat-card">
         <span class="avg-label">Avg TAT</span>
         <span class="avg-value">${avg('tat')}</span>
       </div>
-      <div class="avg-item">
+      <div class="stat-card">
         <span class="avg-label">Avg WT</span>
         <span class="avg-value">${avg('wt')}</span>
       </div>
-      <div class="avg-item">
+      <div class="stat-card">
         <span class="avg-label">Avg RT</span>
         <span class="avg-value">${avg('rt')}</span>
       </div>
-      <div class="avg-item">
+      <div class="stat-card">
         <span class="avg-label">Throughput</span>
         <span class="avg-value">${n} proc</span>
       </div>

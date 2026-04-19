@@ -204,7 +204,10 @@ const Visualization = (() => {
   function renderZone(zoneId, procs, tokenClass, infoFn) {
     const zone = document.getElementById(zoneId);
     zone.innerHTML = '';
-    if (!procs.length) return;
+    if (!procs.length) {
+      zone.innerHTML = '<div class="empty-state">Empty / Idle</div>';
+      return;
+    }
 
     procs.forEach(p => {
       const token = document.createElement('div');
@@ -297,7 +300,7 @@ const Visualization = (() => {
   // -------------------------------------------------------
   function clearZone(id) {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = '';
+    if (el) el.innerHTML = '<div class="empty-state">Empty / Idle</div>';
   }
 
   function setClockDisplay(t) {
