@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Process Analytics</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background: #0b0f17;
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 40px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #00e5c0;
+      text-shadow: 0 0 4px rgba(0, 229, 192, 0.5);
+      margin-bottom: 30px;
+      font-family: 'Syne', sans-serif;
+    }
+
+    .metrics {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .metric-box {
+      flex: 1;
+      min-width: 200px;
+      border: 1px solid rgba(0,255,200,0.3);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,255,200,0.2);
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .metric-box h3 {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    .metric-box p {
+      font-size: 22px;
+      color: #00e5c0;
+    }
+
+    .card {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 15px;
+      border: 1px solid rgba(0,255,200,0.3);
+      box-shadow: 0 0 6px rgba(0,255,200,0.15);
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+    .btn {
+      margin-top: 30px;
+      padding: 12px 25px;
+      border-radius: 10px;
+      border: none;
+      background: #00e5c0;
+      color: #000;
+      cursor: pointer;
+     box-shadow: 0 0 5px rgba(0,229,192,0.4);
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>📊 Process Analytics Dashboard</h1>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric-box">
+      <h3>AVG TAT</h3>
+      <p id="avgTAT">0</p>
+    </div>
+
+    <div class="metric-box">
+      <h3>AVG WT</h3>
+      <p id="avgWT">0</p>
+    </div>
+
+    <div class="metric-box">
+      <h3>AVG RT</h3>
+      <p id="avgRT">0</p>
+    </div>
+
+    <div class="metric-box">
+      <h3>THROUGHPUT</h3>
+      <p id="throughput">0</p>
+    </div>
+  </div>
+
+  <!-- PER PROCESS GRAPH -->
+  <div class="card">
+    <h2>Per Process Metrics</h2>
+    <canvas id="processChart"></canvas>
+  </div>
+
+  <!-- OVERALL GRAPH -->
+  <div class="card">
+    <h2>Overall Metrics</h2>
+    <canvas id="avgChart"></canvas>
+  </div>
+
+  <button class="btn" onclick="goBack()">⬅ Back to Simulation</button>
+  
+
+</div>
+
+<script>
+
+  const processes = JSON.parse(localStorage.getItem("processData")) || [];
+
+  let avgWT = 0, avgTAT = 0, avgRT = 0, throughput = 0;
+
+  function calculateMetrics() {
+    let totalWT = 0, totalTAT = 0, totalRT = 0;
+
+    processes.forEach(p => {
+      totalWT += p.waitingTime || 0;
+      totalTAT += p.turnaroundTime || 0;
+      totalRT += p.responseTime || 0;
+    });
+
+    avgWT = (totalWT / processes.length || 0).toFixed(2);
+    avgTAT = (totalTAT / processes.length || 0).toFixed(2);
+    avgRT = (totalRT / processes.length || 0).toFixed(2);
+
+    const totalTime = Math.max(...processes.map(p => p.completionTime || 1));
+    throughput = (processes.length / totalTime).toFixed(2);
+
+    document.getElementById("avgWT").innerText = avgWT;
+    document.getElementById("avgTAT").innerText = avgTAT;
+    document.getElementById("avgRT").innerText = avgRT;
+    document.getElementById("throughput").innerText = throughput + " proc";
+  }
+
+  function drawProcessChart() {
+    const ctx = document.getElementById('processChart');
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: processes.map(p => "P" + p.id),
+        datasets: [
+          {
+            label: 'Turnaround Time',
+            data: processes.map(p => p.turnaroundTime),
+            backgroundColor: '#00e5c0'
+          },
+          {
+            label: 'Waiting Time',
+            data: processes.map(p => p.waitingTime),
+            backgroundColor: '#00bfff'
+          },
+          {
+            label: 'Response Time',
+            data: processes.map(p => p.responseTime || 0),
+            backgroundColor: '#ffcc00'
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: { labels: { color: 'white' } }
+        },
+        scales: {
+          x: { ticks: { color: 'white' } },
+          y: { ticks: { color: 'white' } }
+        }
+      }
+    });
+  }
+
+  function drawAvgChart() {
+    const ctx = document.getElementById('avgChart');
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Avg TAT', 'Avg WT', 'Avg RT', 'Throughput'],
+        datasets: [{
+          label: 'Overall Metrics',
+          data: [avgTAT, avgWT, avgRT, throughput],
+          backgroundColor: ['#00e5c0', '#00bfff', '#ffcc00', '#ff4d6d']
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { 
+            display: false
+           }
+        },
+        scales: {
+          x: { ticks: { color: 'white' } },
+          y: { ticks: { color: 'white' } }
+        }
+      }
+    });
+  }
+
+  function drawTimeChart() {
+  const ctx = document.getElementById('timeChart');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: processes.map(p => "P" + p.id),
+      datasets: [
+        {
+          label: 'Burst Time',
+          data: processes.map(p => p.burstTime),
+        },
+        {
+          label: 'Turnaround Time',
+          data: processes.map(p => p.turnaroundTime),
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: { labels: { color: 'white' } }
+      },
+      scales: {
+        x: { ticks: { color: 'white' } },
+        y: { ticks: { color: 'white' } }
+      }
+    }
+  });
+}
+
+  function goBack() {
+    window.location.href = "index.html";
+  }
+
+  calculateMetrics();
+drawProcessChart();
+drawAvgChart();
+drawTimeChart(); 
+
+</script>
+
+</body>
+</html>

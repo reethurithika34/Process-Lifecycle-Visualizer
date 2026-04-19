@@ -144,6 +144,18 @@ const UI = (() => {
   // Render results table
   // -------------------------------------------------------
   function renderResults(processes) {
+    const formatted = processes.map(p => ({
+  id: p.pid,
+  arrivalTime: p.at,
+  burstTime: p.bt,
+  completionTime: p.ct,
+  turnaroundTime: p.tat,
+  waitingTime: p.wt,
+  responseTime: p.rt
+}));
+    localStorage.setItem("processData", JSON.stringify(processes));
+    
+
     const tbody = document.getElementById('resultsBody');
     tbody.innerHTML = '';
 

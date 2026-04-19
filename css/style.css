@@ -339,19 +339,47 @@ body {
 
 /* ===== BUTTONS ===== */
 .btn {
-  padding: 10px 16px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 12px;
+  font-family: 'Share Tech Mono', monospace;
   letter-spacing: 1px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,229,192,0.4);
+  background: rgba(255,255,255,0.02);
+  color: #00e5c0;
   cursor: pointer;
-  transition: var(--transition);
-  border: 1px solid transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-transform: uppercase;
+  transition: 0.3s;
+
+  box-shadow:
+    0 0 6px rgba(0,229,192,0.2),
+    inset 0 0 6px rgba(0,229,192,0.1);
+}
+
+#btnRun,
+#btnClear,
+#btnAnalytics {
+  font-family: 'Share Tech Mono', monospace !important;
+  letter-spacing: 1px !important;
+  padding: 12px 20px !important;
+
+  background: rgba(255,255,255,0.02) !important;
+  color: #00e5c0 !important;
+
+  border: 1px solid rgba(0,229,192,0.4) !important;
+  border-radius: 10px !important;
+
+  cursor: pointer !important;
+
+  box-shadow:
+    0 0 6px rgba(0,229,192,0.2),
+    inset 0 0 6px rgba(0,229,192,0.1) !important;
+}
+
+#btnRun:hover,
+#btnClear:hover,
+#btnAnalytics:hover {
+  box-shadow:
+    0 0 12px rgba(0,229,192,0.5),
+    inset 0 0 8px rgba(0,229,192,0.2) !important;
 }
 
 .btn-add {
@@ -429,6 +457,48 @@ body {
   max-height: 180px;
   overflow-y: auto;
   margin-bottom: 4px;
+}
+.action-buttons {
+  display: flex;
+  flex-direction: column;   /* stack vertically */
+  gap: 14px;                /* spacing between buttons */
+  margin-top: 18px;
+  align-items: center;      /* center buttons */
+}
+
+/* Target all 3 buttons */
+.action-buttons button {
+  width: 90%;               /* equal width */
+  padding: 12px 0;
+  
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+
+  color: #00e5c0;
+  background: rgba(0, 0, 0, 0.3);
+
+  border: 1px solid rgba(0, 229, 192, 0.4);
+  border-radius: 12px;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 0 6px rgba(0,229,192,0.2),
+    inset 0 0 6px rgba(0,229,192,0.1);
+
+  transition: all 0.2s ease;
+}
+
+/* Hover glow */
+.action-buttons button:hover {
+  box-shadow:
+    0 0 12px rgba(0,229,192,0.6),
+    inset 0 0 8px rgba(0,229,192,0.2);
+}
+
+/* Slight press effect */
+.action-buttons button:active {
+  transform: scale(0.97);
 }
 
 .empty-state {
@@ -832,6 +902,20 @@ body {
 
 .gantt-card, .results-card {
   animation: fadeIn 0.4s ease;
+}
+#btnAnalytics {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+}
+.action-buttons {
+  position: relative;
+  z-index: 5;
+}
+#btnAnalytics {
+  position: relative;
+  z-index: 100;
+  pointer-events: auto;
 }
 
 /* ===== RESPONSIVE ===== */

@@ -93,6 +93,19 @@
   }
 
   bindEvents();
+  const savedProcesses = JSON.parse(localStorage.getItem("savedProcesses"));
+const savedResults = JSON.parse(localStorage.getItem("savedResults"));
+
+if (savedProcesses) {
+  processes = savedProcesses;
+  processCounter = processes.length + 1;
+
+  UI.renderProcessList(processes, removeProcess);
+}
+
+if (savedResults) {
+  UI.renderResults(savedResults);
+}
 }
 
   // ============================================================
@@ -260,6 +273,9 @@
   function clearAll() {
     processes      = [];
     processCounter = 1;
+
+    localStorage.removeItem("savedProcesses");
+    localStorage.removeItem("savedResults");
     UI.renderProcessList(processes, removeProcess);
     Visualization.reset();
     document.getElementById('btnPause').disabled = true;
@@ -298,9 +314,26 @@
     Visualization.start(result.processes, result.gantt, (finalProcs) => {
       // Render results table when done
       UI.renderResults(finalProcs);
+      window.finalProcs=(finalProcs);
       btnRun.disabled = (processes.length === 0);
     });
   }
+  window.goToAnalytics = function () {
+  const formatted = finalProcs.map(p => ({
+    id: p.pid,
+    arrivalTime: p.at,
+    burstTime: p.bt,
+    completionTime: p.ct || 0,
+    turnaroundTime: p.tat || 0,
+    waitingTime: p.wt || 0,
+    responseTime: p.rt || 0
+  }));
+
+  localStorage.setItem("processData", JSON.stringify(formatted));
+  localStorage.setItem("savedProcesses", JSON.stringify(processes));
+localStorage.setItem("savedResults", JSON.stringify(finalProcs));
+window.location.href = "analytics.html";
+}
 
   // ============================================================
   // Boot
