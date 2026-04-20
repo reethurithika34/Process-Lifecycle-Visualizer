@@ -292,6 +292,20 @@ const Visualization = (() => {
 
     // Show results
     document.getElementById('resultsCard').style.display = 'block';
+    
+    // Save results to session storage for Analytics page
+    try {
+      sessionStorage.setItem('os_sim_results', JSON.stringify(allProcs));
+      sessionStorage.setItem('os_sim_averages', JSON.stringify({
+        n: allProcs.length,
+        tat: (allProcs.reduce((s, p) => s + p.tat, 0) / allProcs.length).toFixed(2),
+        wt: (allProcs.reduce((s, p) => s + p.wt, 0) / allProcs.length).toFixed(2),
+        rt: (allProcs.reduce((s, p) => s + p.rt, 0) / allProcs.length).toFixed(2)
+      }));
+    } catch (e) {
+      console.warn("Failed to save simulation results to sessionStorage", e);
+    }
+
     if (simCallback) simCallback(allProcs);
   }
 
