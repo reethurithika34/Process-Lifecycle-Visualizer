@@ -292,6 +292,7 @@ const Visualization = (() => {
 
     // Show results
     document.getElementById('resultsCard').style.display = 'block';
+<<<<<<< HEAD
     
     // Save results to session storage for Analytics page
     try {
@@ -306,6 +307,8 @@ const Visualization = (() => {
       console.warn("Failed to save simulation results to sessionStorage", e);
     }
 
+=======
+>>>>>>> 4fef4dcbc5e6b9b2cd39dfb5b280c79229283dea
     if (simCallback) simCallback(allProcs);
   }
 
