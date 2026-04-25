@@ -6,40 +6,32 @@
   <title>Process Scheduler - Setup</title>
   <link rel="MAIN" href="index.html" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
   <style>
     :root {
       --accent-primary: #00f7e5;
       --accent-secondary: #00d4ff;
       --accent-danger: #ff3366;
-      
       --bg-dark: #0a0c10;
       --bg-elevated: #0f1319;
       --bg-card: #141820;
-      
       --text-primary: #e8edf5;
       --text-secondary: #a8b0c0;
       --text-muted: #6b7280;
-      
       --font-mono: 'JetBrains Mono', monospace;
       --font-sans: 'Inter', sans-serif;
-      
       --transition: cubic-bezier(0.34, 1.56, 0.64, 1);
       --transition-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
-
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-
     html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
     }
-
     body {
       background: var(--bg-dark);
       color: var(--text-primary);
@@ -47,7 +39,6 @@
       cursor: none;
       position: relative;
     }
-
     /* ========================================
        3D ANIMATED BACKGROUND WITH LAYERS
        ======================================== */
@@ -61,7 +52,6 @@
       background: linear-gradient(135deg, #0a0c10 0%, #0d1520 50%, #0a0f1a 100%);
       overflow: hidden;
     }
-
     /* Base grid */
     .grid-base {
       position: absolute;
@@ -74,12 +64,10 @@
       animation: gridScroll 20s linear infinite;
       opacity: 0.3;
     }
-
     @keyframes gridScroll {
       0% { transform: translate(0, 0); }
       100% { transform: translate(60px, 60px); }
     }
-
     /* Floating orbs - 3D effect */
     .orb {
       position: absolute;
@@ -89,7 +77,6 @@
       opacity: 0;
       animation: orbFloat 15s ease-in-out infinite;
     }
-
     .orb-1 {
       width: 500px;
       height: 500px;
@@ -98,7 +85,6 @@
       left: -150px;
       animation-delay: 0s;
     }
-
     .orb-2 {
       width: 400px;
       height: 400px;
@@ -107,7 +93,6 @@
       right: -100px;
       animation-delay: 3s;
     }
-
     .orb-3 {
       width: 350px;
       height: 350px;
@@ -116,7 +101,6 @@
       right: 10%;
       animation-delay: 6s;
     }
-
     @keyframes orbFloat {
       0%, 100% {
         transform: translate(0, 0) scale(1);
@@ -133,7 +117,6 @@
         opacity: 0.08;
       }
     }
-
     /* Cursor-following glow */
     .cursor-glow {
       position: fixed;
@@ -146,7 +129,6 @@
       transform: translate(-50%, -50%);
       z-index: 0;
     }
-
     /* Custom cursor */
     .custom-cursor {
       position: fixed;
@@ -160,7 +142,6 @@
       mix-blend-mode: screen;
       transition: all 0.08s ease-out;
     }
-
     .custom-cursor::before {
       content: '';
       position: absolute;
@@ -172,14 +153,12 @@
       border-radius: 50%;
       transform: translate(-50%, -50%);
     }
-
     .custom-cursor.click {
       width: 36px;
       height: 36px;
       border-color: var(--accent-danger);
       background: rgba(255, 51, 102, 0.1);
     }
-
     /* ========================================
        LAYOUT CONTAINER
        ======================================== */
@@ -195,7 +174,6 @@
       padding: 60px 40px;
       overflow-y: auto;
     }
-
     .wrapper {
       width: 100%;
       max-width: 1100px;
@@ -205,14 +183,12 @@
       align-items: center;
       z-index: 10;
     }
-
     /* ========================================
        LEFT CONTENT SECTION
        ======================================== */
     .content {
       animation: slideInLeft 0.8s var(--transition-smooth) backwards;
     }
-
     @keyframes slideInLeft {
       from {
         opacity: 0;
@@ -223,7 +199,6 @@
         transform: translateX(0);
       }
     }
-
     h1 {
       font-family: var(--font-mono);
       font-size: 42px;
@@ -233,7 +208,6 @@
       letter-spacing: -1px;
       color: var(--text-primary);
     }
-
     .tagline {
       font-size: 12px;
       font-weight: 500;
@@ -242,7 +216,6 @@
       color: var(--text-muted);
       margin-bottom: 48px;
     }
-
     /* Technical specs grid */
     .specs {
       display: flex;
@@ -252,17 +225,14 @@
       border-left: 2px solid rgba(0, 247, 229, 0.2);
       padding-left: 24px;
     }
-
     .spec-row {
       padding: 20px 0;
       border-bottom: 1px solid rgba(0, 247, 229, 0.08);
       animation: fadeInUp 0.8s var(--transition-smooth) backwards;
     }
-
     .spec-row:nth-child(1) { animation-delay: 0.15s; }
     .spec-row:nth-child(2) { animation-delay: 0.2s; }
     .spec-row:nth-child(3) { animation-delay: 0.25s; }
-
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -273,7 +243,6 @@
         transform: translateY(0);
       }
     }
-
     .spec-label {
       font-size: 10px;
       font-weight: 700;
@@ -283,14 +252,12 @@
       margin-bottom: 4px;
       font-family: var(--font-mono);
     }
-
     .spec-value {
       font-size: 14px;
       font-weight: 500;
       color: var(--text-secondary);
       font-family: var(--font-mono);
     }
-
     /* Divider */
     .divider {
       width: 40px;
@@ -298,7 +265,6 @@
       background: rgba(0, 247, 229, 0.2);
       margin: 40px 0;
     }
-
     .note {
       padding: 16px 20px;
       border: 1px solid rgba(0, 247, 229, 0.15);
@@ -309,7 +275,6 @@
       line-height: 1.6;
       animation: fadeInUp 0.8s var(--transition-smooth) backwards 0.3s;
     }
-
     /* ========================================
        RIGHT CONTROL SECTION
        ======================================== */
@@ -319,7 +284,6 @@
       gap: 48px;
       animation: slideInRight 0.8s var(--transition-smooth) backwards;
     }
-
     @keyframes slideInRight {
       from {
         opacity: 0;
@@ -330,18 +294,15 @@
         transform: translateX(0);
       }
     }
-
     .control-group {
       display: flex;
       flex-direction: column;
       gap: 16px;
       animation: fadeInUp 0.8s var(--transition-smooth) backwards;
     }
-
     .control-group:nth-child(1) { animation-delay: 0.35s; }
     .control-group:nth-child(2) { animation-delay: 0.4s; }
     .control-group:nth-child(3) { animation-delay: 0.45s; }
-
     .control-label {
       font-family: var(--font-mono);
       font-size: 10px;
@@ -350,31 +311,26 @@
       text-transform: uppercase;
       color: var(--text-muted);
     }
-
     /* Button groups */
     .btn-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
-
     .btn {
       padding: 20px 16px;
       border: 1px solid rgba(0, 247, 229, 0.2);
       border-radius: 8px;
       background: rgba(0, 247, 229, 0.01);
       color: var(--text-secondary);
-      
       font-family: var(--font-sans);
       font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.4px;
-      
       cursor: pointer;
       transition: all 0.3s var(--transition-smooth);
       position: relative;
       overflow: hidden;
-      
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -382,7 +338,6 @@
       min-height: 100px;
       justify-content: center;
     }
-
     .btn::after {
       content: '';
       position: absolute;
@@ -393,20 +348,16 @@
       background: linear-gradient(90deg, transparent, rgba(0, 247, 229, 0.06), transparent);
       transition: left 0.6s ease;
     }
-
     .btn:hover::after {
       left: 100%;
     }
-
     .btn:hover {
       padding: 24px 20px;
       border-color: var(--accent-primary);
       background: rgba(0, 247, 229, 0.04);
       color: var(--accent-primary);
       transform: translateY(-2px);
-
     }
-
     .btn.selected {
       border-color: var(--accent-primary);
       background: rgba(0, 247, 229, 0.08);
@@ -415,7 +366,6 @@
         inset 0 0 20px rgba(0, 247, 229, 0.05),
         0 0 20px rgba(0, 247, 229, 0.1);
     }
-
     .btn.selected::before {
       content: '✓';
       position: absolute;
@@ -425,13 +375,11 @@
       color: var(--accent-primary);
       font-weight: 700;
     }
-
     .btn-text {
       font-size: 20px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-
     /* Algorithm section */
     #algo-section {
       max-height: 0;
@@ -439,34 +387,28 @@
       overflow: hidden;
       transition: all 0.5s var(--transition-smooth);
     }
-
     #algo-section.visible {
       max-height: 300px;
       opacity: 1;
     }
-
     .algo-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 12px;
     }
-
     .algo-btn {
       padding: 20px 12px;
       border: 1px solid rgba(0, 212, 255, 0.2);
       border-radius: 8px;
       background: rgba(0, 212, 255, 0.01);
       color: var(--text-secondary);
-      
       font-family: var(--font-sans);
       font-size: 20px;
       font-weight: 600;
-      
       cursor: pointer;
       transition: all 0.3s var(--transition-smooth);
       position: relative;
       overflow: hidden;
-      
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -475,7 +417,6 @@
       height: 100px;
       width: 100%;
     }
-
     .algo-btn:hover {
       border-color: var(--accent-secondary);
       background: rgba(0, 212, 255, 0.04);
@@ -483,7 +424,6 @@
       font-size: medium;
       padding: 20px 16px;
     }
-
     .algo-btn.selected {
       border-color: var(--accent-secondary);
       background: rgba(0, 212, 255, 0.08);
@@ -491,15 +431,11 @@
       box-shadow: inset 0 0 12px rgba(0, 212, 255, 0.04);
       padding: 20px 16px;
     }
-
-    
-
     .algo-name {
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }
-
     .tooltip {
       position: absolute;
       bottom: -40px;
@@ -517,11 +453,9 @@
       z-index: 20;
       transition: opacity 0.3s ease;
     }
-
     .algo-wrapper:hover .tooltip {
       opacity: 1;
     }
-
     /* ========================================
        ACTION SECTION
        ======================================== */
@@ -529,30 +463,24 @@
       margin-top: 16px;
       animation: fadeInUp 0.8s var(--transition-smooth) backwards 0.5s;
     }
-
     .launch-btn {
       width: 100%;
       padding: 18px 24px;
       border: none;
       border-radius: 8px;
-      
       background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
       color: var(--bg-dark);
-      
       font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 1.2px;
       text-transform: uppercase;
-      
       cursor: pointer;
       position: relative;
       overflow: hidden;
       transition: all 0.3s var(--transition);
-      
       box-shadow: 0 12px 40px rgba(0, 247, 229, 0.25);
     }
-
     .launch-btn::before {
       content: '';
       position: absolute;
@@ -563,27 +491,22 @@
       background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
       transition: left 0.7s ease;
     }
-
     .launch-btn:hover::before {
       left: 100%;
     }
-
     .launch-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 16px 50px rgba(0, 247, 229, 0.35);
     }
-
     .launch-btn:disabled {
       opacity: 0.35;
       cursor: not-allowed;
       transform: none;
     }
-
     .launch-btn span {
       position: relative;
       z-index: 1;
     }
-
     /* ========================================
        NOTIFICATIONS
        ======================================== */
@@ -592,33 +515,26 @@
       bottom: 40px;
       left: 50%;
       transform: translateX(-50%) translateY(120px);
-      
       padding: 14px 22px;
       border-radius: 6px;
       border: 1px solid var(--accent-primary);
       background: rgba(0, 247, 229, 0.08);
       backdrop-filter: blur(10px);
-      
       color: var(--accent-primary);
       font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 600;
-      
       box-shadow: 0 12px 40px rgba(0, 247, 229, 0.15);
-      
       opacity: 0;
       pointer-events: none;
       z-index: 1000;
-      
       transition: all 0.4s var(--transition-smooth);
     }
-
     .notification.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
       pointer-events: auto;
     }
-
     /* ========================================
        RESPONSIVE DESIGN
        ======================================== */
@@ -627,101 +543,79 @@
         grid-template-columns: 1fr;
         gap: 48px;
       }
-
       h1 {
         font-size: 36px;
       }
-
       .btn-group {
         grid-template-columns: 1fr 1fr;
       }
     }
-
     @media (max-width: 768px) {
       .viewport {
         padding: 40px 24px;
       }
-
       .wrapper {
         gap: 40px;
       }
-
       h1 {
         font-size: 32px;
       }
-
       .btn-group {
         grid-template-columns: 1fr;
       }
-
       .algo-grid {
         grid-template-columns: 1fr 1fr 1fr;
         gap: 10px;
       }
-
       .algo-btn {
         height: 95px;
       }
-
       .specs {
         gap: 0;
       }
     }
-
     @media (max-width: 480px) {
       .viewport {
         padding: 24px 16px;
       }
-
       h1 {
         font-size: 24px;
         margin-bottom: 6px;
       }
-
       .tagline {
         margin-bottom: 32px;
       }
-
       .specs {
         margin-bottom: 32px;
       }
-
       .spec-row {
         padding: 16px 0;
       }
-
       .btn {
         padding: 16px 12px;
         min-height: 90px;
         gap: 6px;
       }
-
       .btn-icon {
         font-size: 20px;
       }
-
       .btn-text {
         font-size: 9px;
       }
-
       .algo-grid {
         grid-template-columns: 1fr 1fr 1fr;
         gap: 8px;
       }
-
       .algo-btn {
         padding: 12px 8px;
         height: 85px;
       }
-
       .algo-icon {
         font-size: 16px;
       }
-
       .algo-name {
         font-size: 30px;
       }
-
       .launch-btn {
         padding: 16px 20px;
         font-size: 11px;
@@ -729,28 +623,21 @@
     }
   </style>
 </head>
-
 <body>
-  <!-- 3D BACKGROUND -->
   <div class="background-container">
     <div class="grid-base"></div>
+    <div class="grid-glow"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
     <div class="cursor-glow" id="cursorGlow"></div>
   </div>
-
-  <!-- CUSTOM CURSOR -->
   <div class="custom-cursor" id="customCursor"></div>
-
-  <!-- MAIN VIEWPORT -->
   <div class="viewport">
     <div class="wrapper">
-      <!-- LEFT CONTENT -->
       <div class="content">
         <h1>Scheduler</h1>
         <p class="tagline">CPU Scheduling Simulator</p>
-
         <div class="specs">
           <div class="spec-row">
             <div class="spec-label">Mode</div>
@@ -765,17 +652,12 @@
             <div class="spec-value">Gantt chart & metrics</div>
           </div>
         </div>
-
         <div class="divider"></div>
-
         <div class="note">
           → Select scheduling type and algorithm to execute simulation
         </div>
       </div>
-
-      <!-- RIGHT CONTROLS -->
       <div class="controls">
-        <!-- Type Selection -->
         <div class="control-group">
           <label class="control-label">Scheduling Type</label>
           <div class="btn-group">
@@ -789,33 +671,24 @@
             </button>
           </div>
         </div>
-
-        <!-- Algorithm Selection -->
         <div class="control-group" id="algo-section">
           <label class="control-label">Algorithm</label>
           <div class="algo-grid" id="algo-container"></div>
         </div>
-
             <div class="action">
-                <a href="index.html">
-                    <button class="launch-btn">
-                    <span>▶ Launch Simulation</span>
-                    </button>
-                </a>
+                <button id="launchBtn" class="launch-btn" onclick="startSimulation()">
+                  <span>▶ Launch Simulation</span>
+                </button>
             </div>
         </div>
     </div>
   </div>
-
-  <!-- NOTIFICATION -->
   <div class="notification" id="notification"></div>
-
   <script>
     let selectedType = "";
     let selectedAlgo = "";
     let mouseX = 0;
     let mouseY = 0;
-
     const algorithmMeta = {
       SRTF: { name: "SRTF", tooltip: "Shortest remaining time first" },
       PriorityP: { name: "Priority (P)", tooltip: "Preemptive priority" },
@@ -824,96 +697,75 @@
       SJF: { name: "SJF", tooltip: "Shortest job first" },
       PriorityNP: { name: "Priority (NP)", tooltip: "Non-preemptive priority" }
     };
-
     /* ========================================
        3D CURSOR TRACKING
        ======================================== */
     document.addEventListener("mousemove", (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-
       const cursor = document.getElementById("customCursor");
       cursor.style.left = mouseX + "px";
       cursor.style.top = mouseY + "px";
-
       const glow = document.getElementById("cursorGlow");
       glow.style.left = mouseX + "px";
       glow.style.top = mouseY + "px";
     });
-
     document.addEventListener("click", () => {
       const cursor = document.getElementById("customCursor");
       cursor.classList.add("click");
       setTimeout(() => cursor.classList.remove("click"), 150);
     });
-
     /* ========================================
        TYPE SELECTION
        ======================================== */
     function setType(btn, type) {
       selectedType = type;
-
       document.querySelectorAll(".btn.type").forEach(b => {
         b.classList.remove("selected");
       });
       btn.classList.add("selected");
-
       const algoSection = document.getElementById("algo-section");
       algoSection.classList.add("visible");
-
       loadAlgorithms();
       updateLaunchBtn();
     }
-
     /* ========================================
        LOAD ALGORITHMS
        ======================================== */
     function loadAlgorithms() {
       const container = document.getElementById("algo-container");
       container.innerHTML = "";
-
       let algorithms = selectedType === "preemptive" 
         ? ["SRTF", "PriorityP", "RoundRobin"]
         : ["FCFS", "SJF", "PriorityNP"];
-
       algorithms.forEach(algoKey => {
         const meta = algorithmMeta[algoKey];
-        
         const wrapper = document.createElement("div");
         wrapper.className = "algo-wrapper";
-
         const btn = document.createElement("button");
         btn.className = "algo-btn";
         btn.innerHTML = `
           <div class="algo-name">${meta.name}</div>`;
-
         const tooltip = document.createElement("div");
         tooltip.className = "tooltip";
         tooltip.textContent = meta.tooltip;
-
         wrapper.appendChild(btn);
         wrapper.appendChild(tooltip);
-
         btn.onclick = () => setAlgo(btn, algoKey);
-
         container.appendChild(wrapper);
       });
     }
-
     /* ========================================
        ALGORITHM SELECTION
        ======================================== */
     function setAlgo(btn, algo) {
       selectedAlgo = algo;
-
       document.querySelectorAll(".algo-btn").forEach(b => {
         b.classList.remove("selected");
       });
       btn.classList.add("selected");
-
       updateLaunchBtn();
     }
-
     /* ========================================
        UPDATE LAUNCH BUTTON
        ======================================== */
@@ -921,7 +773,6 @@
       const btn = document.getElementById("launchBtn");
       btn.disabled = !(selectedType && selectedAlgo);
     }
-
     /* ========================================
        START SIMULATION
        ======================================== */
@@ -931,17 +782,13 @@
         shakeBtn();
         return;
       }
-
       showNotification("✓ Launching simulation...");
-
       const btn = document.getElementById("launchBtn");
       btn.style.transform = "scale(0.97)";
-
       setTimeout(() => {
-        window.location.href = `sim.html?type=${selectedType}&algo=${selectedAlgo}`;
+        window.location.href = `index.html?type=${selectedType}&algo=${selectedAlgo}`;
       }, 400);
     }
-
     /* ========================================
        UTILITIES
        ======================================== */
@@ -949,16 +796,12 @@
       const notif = document.getElementById("notification");
       notif.textContent = msg;
       notif.classList.remove("show");
-
       void notif.offsetWidth;
-
       notif.classList.add("show");
-
       setTimeout(() => {
         notif.classList.remove("show");
       }, 3000);
     }
-
     function shakeBtn() {
       const btn = document.getElementById("launchBtn");
       btn.style.animation = "none";
@@ -966,7 +809,6 @@
       btn.style.animation = `shake 0.4s cubic-bezier(0.36, 0, 0.66, -0.56)`;
       setTimeout(() => { btn.style.animation = "none"; }, 400);
     }
-
     const shakeStyle = document.createElement("style");
     shakeStyle.textContent = `
       @keyframes shake {
@@ -976,7 +818,6 @@
       }
     `;
     document.head.appendChild(shakeStyle);
-
     /* Init */
     document.addEventListener("DOMContentLoaded", () => {
       updateLaunchBtn();

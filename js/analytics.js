@@ -1,43 +1,26 @@
-/**
- * analytics.js
- * ============================================================
- * Reads sessionStorage to extract simulator results and maps 
- * data to beautiful Chart.js instances.
- * ============================================================
- */
 
 document.addEventListener('DOMContentLoaded', () => {
     const rawData = sessionStorage.getItem('os_sim_results');
-    
-    // Check if data is available
     if (!rawData) {
         document.getElementById('noDataMessage').style.display = 'block';
         return;
     }
-
     const processes = JSON.parse(rawData);
     if (!processes || processes.length === 0) {
         document.getElementById('noDataMessage').style.display = 'block';
         return;
     }
-
-    // Show dashboard
     document.getElementById('dashboard').style.display = 'grid';
-
-    // --- Chart.js Theme Configuration ---
-    Chart.defaults.color = '#7a8ba8'; // var(--text-secondary)
+    Chart.defaults.color = '#7a8ba8'; 
     Chart.defaults.font.family = "'Share Tech Mono', monospace";
-    Chart.defaults.plugins.tooltip.backgroundColor = '#141820'; // var(--bg-card)
-    Chart.defaults.plugins.tooltip.titleColor = '#e8edf5';      // var(--text-primary)
-    Chart.defaults.plugins.tooltip.borderColor = '#2a3650';     // var(--border-glow)
+    Chart.defaults.plugins.tooltip.backgroundColor = '#141820'; 
+    Chart.defaults.plugins.tooltip.titleColor = '#e8edf5';      
+    Chart.defaults.plugins.tooltip.borderColor = '#2a3650';     
     Chart.defaults.plugins.tooltip.borderWidth = 1;
     Chart.defaults.plugins.tooltip.padding = 10;
     Chart.defaults.plugins.tooltip.cornerRadius = 4;
-
     const labels = processes.map(p => `P${p.pid}`);
     const gridColor = 'rgba(255, 255, 255, 0.03)';
-
-    // --- 1. Bar Chart (TAT, WT, RT) ---
     const ctxBar = document.getElementById('barChart').getContext('2d');
     new Chart(ctxBar, {
         type: 'bar',
@@ -48,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     label: 'Turnaround Time (TAT)',
                     data: processes.map(p => p.tat),
                     backgroundColor: 'rgba(0, 229, 192, 0.6)', 
-                    borderColor: '#00e5c0', // var(--accent)
+                    borderColor: '#00e5c0', 
                     borderWidth: 1,
                     borderRadius: 4
                 },
@@ -56,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     label: 'Waiting Time (WT)',
                     data: processes.map(p => p.wt),
                     backgroundColor: 'rgba(249, 115, 22, 0.6)',
-                    borderColor: '#f97316', // var(--color-waiting)
+                    borderColor: '#f97316', 
                     borderWidth: 1,
                     borderRadius: 4
                 },
@@ -72,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: {
                 mode: 'index',
                 intersect: false,
@@ -86,8 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    // --- 2. Doughnut Chart (Burst Distribution) ---
     const ctxPie = document.getElementById('pieChart').getContext('2d');
     const bgColors = [
         'rgba(34, 197, 94, 0.7)',
@@ -100,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'rgba(139, 92, 246, 0.7)'
     ];
     const borderColors = bgColors.map(c => c.replace('0.7)', '1)'));
-    
     new Chart(ctxPie, {
         type: 'doughnut',
         data: {
@@ -108,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets: [{
                 data: processes.map(p => p.bt),
                 backgroundColor: bgColors.slice(0, labels.length) || bgColors[0],
-                borderColor: '#0f1218', // Matches bg-surface to blend borders cleanly
+                borderColor: '#0f1218', 
                 borderWidth: 3,
                 hoverOffset: 6
             }]
@@ -122,18 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
             cutout: '60%'
         }
     });
-
-    // --- 3. Line Chart (Execution Timeline CT) ---
     const ctxLine = document.getElementById('lineChart').getContext('2d');
-    
-    // Sort processes by Completion Time to draw a logical cumulative progression
     const sortedProcs = [...processes].sort((a, b) => a.ct - b.ct);
-    
-    // Create a beautiful fade gradient for the area chart fill
     const lineGradient = ctxLine.createLinearGradient(0, 0, 0, 400);
     lineGradient.addColorStop(0, 'rgba(34, 197, 94, 0.3)');
     lineGradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
-
     new Chart(ctxLine, {
         type: 'line',
         data: {
@@ -141,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets: [{
                 label: 'Completion Time (CT)',
                 data: sortedProcs.map(p => p.ct),
-                borderColor: '#22c55e', // var(--color-running)
+                borderColor: '#22c55e', 
                 backgroundColor: lineGradient,
                 borderWidth: 2,
                 pointBackgroundColor: '#22c55e',

@@ -7,16 +7,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/style.css">
-
-<script src="js/main.js"></script>
-<script src="js/scheduler.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/visualization.js"></script>
 </head>
 <body>
-
-  <!-- ===== HEADER ===== -->
+  <div class="background-container">
+    <div class="grid-base"></div>
+    <div class="grid-glow"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+  </div>
+  <div class="custom-cursor" id="customCursor"></div>
   <header class="site-header">
     <div class="header-glow"></div>
     <div class="header-inner">
@@ -35,14 +37,8 @@
       </div>
     </div>
   </header>
-
-  <!-- ===== MAIN LAYOUT ===== -->
   <main class="main-layout">
-
-    <!-- LEFT PANEL: Controls -->
     <aside class="control-panel" id="controlPanel">
-
-      <!-- Scheduling Type -->
       <div class="panel-card">
         <div class="card-label">SCHEDULING TYPE</div>
         <div class="toggle-group">
@@ -50,22 +46,15 @@
           <button class="toggle-btn" id="btnNonPreemptive" data-type="nonpreemptive">Non-Preemptive</button>
         </div>
       </div>
-
-      <!-- Algorithm Selection -->
       <div class="panel-card">
         <div class="card-label">ALGORITHM</div>
         <div class="algo-list" id="algoList">
-          <!-- Populated by JS -->
         </div>
       </div>
-
-      <!-- Time Quantum (RR only) -->
       <div class="panel-card" id="quantumCard" style="display:none;">
         <div class="card-label">TIME QUANTUM</div>
         <input class="form-input" type="number" id="timeQuantum" min="1" value="2" placeholder="Quantum" />
       </div>
-
-      <!-- Process Input Form -->
       <div class="panel-card">
         <div class="card-label">ADD PROCESS</div>
         <div class="form-grid">
@@ -85,8 +74,6 @@
         <button class="btn btn-add" id="btnAddProcess">+ Add Process</button>
         <div class="error-msg" id="errorMsg"></div>
       </div>
-
-      <!-- Process Queue List -->
       <div class="panel-card">
         <div class="card-label">PROCESS QUEUE <span class="count-badge" id="processCount">0</span></div>
         <div class="process-list" id="processList">
@@ -97,13 +84,8 @@
           <button class="btn btn-clear" id="btnClear">Clear All</button>
         </div>
       </div>
-
     </aside>
-
-    <!-- RIGHT PANEL: Visualization -->
     <section class="viz-panel" id="vizPanel">
-
-      <!-- Lifecycle States -->
       <div class="lifecycle-grid" id="lifecycleGrid">
         <div class="state-card state-ready">
           <div class="state-header">
@@ -134,8 +116,6 @@
           <div class="state-body" id="terminatedList"><div class="empty-state">Empty / Idle</div></div>
         </div>
       </div>
-
-      <!-- Clock Display -->
       <div class="clock-bar">
         <div class="clock-inner">
           <span class="clock-label">SYSTEM TIME</span>
@@ -152,8 +132,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Gantt Chart -->
       <div class="panel-card gantt-card" id="ganttCard" style="display:none;">
         <div class="card-label">GANTT CHART</div>
         <div class="gantt-scroll">
@@ -161,17 +139,11 @@
           <div class="gantt-timeline" id="ganttTimeline"></div>
         </div>
       </div>
-
-      <!-- Results Table -->
       <div class="panel-card results-card" id="resultsCard" style="display:none;">
-<<<<<<< HEAD
         <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
           <div class="card-label" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">RESULTS TABLE</div>
           <a href="analytics.html" class="btn btn-run" style="font-size: 10px; padding: 6px 12px; flex: none; text-decoration: none;">View Analytics 📊</a>
         </div>
-=======
-        <div class="card-label">RESULTS TABLE</div>
->>>>>>> 4fef4dcbc5e6b9b2cd39dfb5b280c79229283dea
         <div class="table-scroll">
           <table class="results-table" id="resultsTable">
             <thead>
@@ -190,15 +162,12 @@
         </div>
         <div class="averages-row" id="averagesRow"></div>
       </div>
-
     </section>
   </main>
-
-  <!-- Scripts -->
   <script src="js/scheduler.js"></script>
   <script src="js/visualization.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/webgl-bg.js"></script>
+  <script src="js/cursor.js"></script>
 </body>
 </html>

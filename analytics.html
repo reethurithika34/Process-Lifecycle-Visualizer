@@ -35,54 +35,69 @@
         .chart-card.full-width {
             grid-column: 1 / -1;
         }
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            background: var(--bg-surface);
-            padding: 24px 30px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-card);
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+            width: 100%;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="analytics-container">
-        <!-- Header -->
-        <div class="header-actions">
-            <div>
-                <h1 class="site-title" style="font-size: 24px;">Simulation Analytics</h1>
-                <p class="site-subtitle" style="margin-top: 6px;">Performance graphs and time distributions</p>
-            </div>
-            <a href="index.html" class="btn btn-clear" style="text-decoration: none;">← Back to Simulator</a>
+  <div class="background-container">
+    <div class="grid-base"></div>
+    <div class="grid-glow"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+  </div>
+  <div class="custom-cursor" id="customCursor"></div>
+    <header class="site-header">
+      <div class="header-glow"></div>
+      <div class="header-inner">
+        <a href="index.html" class="logo-mark" style="text-decoration:none;">
+          <span class="logo-bracket">[</span>
+          <span class="logo-cpu">CPU</span>
+          <span class="logo-bracket">]</span>
+        </a>
+        <div class="header-text">
+          <h1 class="site-title">OS Process Lifecycle Visualizer</h1>
+          <p class="site-subtitle">Process Analytics Dashboard</p>
         </div>
-
-        <!-- No Data State -->
+        <div class="header-status" style="margin-left: auto;">
+          <a href="index.html" class="btn btn-clear" style="text-decoration: none; font-size: 11px; padding: 8px 16px;">← Back to Simulator</a>
+        </div>
+      </div>
+    </header>
+    <div class="analytics-container" style="margin-top: 100px;">
         <div id="noDataMessage" class="empty-state" style="display: none; padding: 60px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border);">
             <h3>No simulation data found</h3>
             <p style="margin-top: 10px;">Please run a simulation on the main application to view analytics.</p>
         </div>
-
-        <!-- Dashboard Grid -->
         <div id="dashboard" class="analytics-grid" style="display: none;">
             <div class="chart-card full-width">
                 <div class="card-label">Turnaround, Waiting, and Response Times</div>
-                <canvas id="barChart" height="90"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="barChart"></canvas>
+                </div>
             </div>
             <div class="chart-card">
                 <div class="card-label">CPU Burst Distribution</div>
-                <canvas id="pieChart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="pieChart"></canvas>
+                </div>
             </div>
             <div class="chart-card">
                 <div class="card-label">Execution Timeline</div>
-                <canvas id="lineChart"></canvas>
+                <div class="chart-wrapper">
+                    <canvas id="lineChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
-
-    <script src="js/webgl-bg.js"></script>
     <script src="js/analytics.js"></script>
+    <script src="js/cursor.js"></script>
 </body>
 </html>
