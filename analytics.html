@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - OS Process Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 900px) {
+            .analytics-grid { grid-template-columns: 1fr; }
+        }
+        .chart-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+        }
+        .chart-card:hover { border-color: var(--border-glow); }
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+  <div class="background-container">
+    <div class="grid-base"></div>
+    <div class="grid-glow"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="cursor-glow" id="cursorGlow"></div>
+  </div>
+  <div class="custom-cursor" id="customCursor"></div>
+    <header class="site-header">
+      <div class="header-glow"></div>
+      <div class="header-inner">
+        <a href="index.html" class="logo-mark" style="text-decoration:none;">
+          <span class="logo-bracket">[</span>
+          <span class="logo-cpu">CPU</span>
+          <span class="logo-bracket">]</span>
+        </a>
+        <div class="header-text">
+          <h1 class="site-title">OS Process Lifecycle Visualizer</h1>
+          <p class="site-subtitle">Process Analytics Dashboard</p>
+        </div>
+        <div class="header-status" style="margin-left: auto;">
+          <a href="index.html" class="btn btn-clear" style="text-decoration: none; font-size: 11px; padding: 8px 16px;">← Back to Simulator</a>
+        </div>
+      </div>
+    </header>
+    <div class="analytics-container" style="margin-top: 100px;">
+        <div id="noDataMessage" class="empty-state" style="display: none; padding: 60px; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed var(--border);">
+            <h3>No simulation data found</h3>
+            <p style="margin-top: 10px;">Please run a simulation on the main application to view analytics.</p>
+        </div>
+        <div id="dashboard" class="analytics-grid" style="display: none;">
+            <div class="chart-card full-width">
+                <div class="card-label">Turnaround, Waiting, and Response Times</div>
+                <div class="chart-wrapper">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="card-label">CPU Burst Distribution</div>
+                <div class="chart-wrapper">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="card-label">Execution Timeline</div>
+                <div class="chart-wrapper">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/analytics.js"></script>
+    <script src="js/cursor.js"></script>
+</body>
+</html>
