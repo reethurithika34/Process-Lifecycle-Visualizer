@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Scheduler // CPU Process Optimizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+<style>
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root {
+  --bg-base:          #0a0c10;
+  --bg-surface:       #0f1218;
+  --bg-card:          #141820;
+  --bg-card-hover:    #181e28;
+  --border:           #1e2535;
+  --border-glow:      #2a3650;
+  --accent:           #00e5c0;
+  --accent-dim:       #00b89a;
+  --accent-glow:      rgba(0,229,192,0.15);
+  --color-running:    #22c55e;
+  --color-ready:      #f59e0b;
+  --color-waiting:    #f97316;
+  --color-terminated: #6b7280;
+  --text-primary:     #e8edf5;
+  --text-secondary:   #7a8ba8;
+  --text-muted:       #3d4f6a;
+  --font-mono:        'Share Tech Mono', monospace;
+  --font-display:     'Syne', sans-serif;
+  --radius-sm:        4px;
+  --radius-md:        8px;
+  --radius-lg:        14px;
+  --ease:             cubic-bezier(0.4,0,0.2,1);
+  --transition:       all 0.25s cubic-bezier(0.4,0,0.2,1);
+  --shadow-card:      0 4px 24px rgba(0,0,0,0.5);
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg-base);
+}
+
+body {
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: none;            /* hide native cursor everywhere */
+}
+
+/* scrollbar */
+::-webkit-scrollbar              { width: 6px; height: 6px; }
+::-webkit-scrollbar-track        { background: var(--bg-base); }
+::-webkit-scrollbar-thumb        { background: var(--border-glow); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover  { background: var(--accent-dim); }
+
+
+/* ============================================================
+   BACKGROUND
+   ============================================================ */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -100;
+  background: linear-gradient(135deg, #07090d 0%, #0d1520 50%, #05080e 100%);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* base dim grid */
+.bg__grid {
+  position: absolute;
+  width: 200%; height: 200%;
+  background-image:
+    linear-gradient(0deg,  rgba(0,247,229,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,247,229,.07) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridScroll 20s linear infinite;
+  opacity: 0.4;
+}
+
+/* mouse-lit grid */
+.bg__grid-glow {
+  position: absolute;
+  width: 200%; height: 200%;
+  background-image:
+    linear-gradient(0deg,  rgba(0,247,229,.8) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,247,229,.8) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridScroll 20s linear infinite;
+  opacity: 1;
+  -webkit-mask-image: radial-gradient(circle 200px at var(--mx,-100%) var(--my,-100%), black, transparent);
+          mask-image: radial-gradient(circle 200px at var(--mx,-100%) var(--my,-100%), black, transparent);
+  z-index: 1;
+}
+
+@keyframes gridScroll {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(60px, 60px); }
+}
+
+/* ambient orbs */
+.bg__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: orbFloat 15s ease-in-out infinite;
+}
+.bg__orb--1 { width:600px; height:600px; background:radial-gradient(circle,rgba(0,247,229,.6),transparent);  top:-150px;  left:-150px; animation-delay:0s; }
+.bg__orb--2 { width:500px; height:500px; background:radial-gradient(circle,rgba(0,212,255,.5),transparent);  bottom:-150px; right:-100px; animation-delay:3s; }
+.bg__orb--3 { width:450px; height:450px; background:radial-gradient(circle,rgba(0,247,229,.45),transparent); top:40%;     right:15%;   animation-delay:6s; }
+.bg__orb--4 { width:700px; height:700px; background:radial-gradient(circle,rgba(138,43,226,.35),transparent); bottom:20%;  left:10%;    animation-delay:9s; }
+
+@keyframes orbFloat {
+  0%,100% { transform:translate(0,0) scale(1);   opacity:0; }
+  25%      { opacity:.12; }
+  50%      { transform:translate(-40px,-40px) scale(1.1); opacity:.10; }
+  75%      { opacity:.12; }
+}
+
+
+/* ============================================================
+   CURSOR  — thin ring + solid centre dot (reference exact)
+   ============================================================ */
+
+/* ambient glow blob — follows mouse, no transition lag */
+.cursor-glow {
+  position: fixed;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,192,.08), transparent 70%);
+  filter: blur(55px);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 9990;
+  /* intentionally NO transition — moves with mouse in JS */
+}
+
+/* cursor ring */
+.cursor {
+  position: fixed;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+
+  /* ✦ thin teal ring, zero fill — exact reference */
+  border: 1.5px solid rgba(0, 229, 192, 0.80);
+  background: transparent;
+
+  /* centres the inner dot */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: width .10s var(--ease),
+              height .10s var(--ease),
+              border-color .10s var(--ease);
+}
+
+/* centre dot — solid, no glow */
+.cursor::before {
+  content: '';
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* click state */
+.cursor.is-clicking {
+  width: 28px; height: 28px;
+  border-color: rgba(255, 51, 102, .85);
+}
+.cursor.is-clicking::before {
+  background: #ff3366;
+}
+
+
+/* ============================================================
+   SITE HEADER
+   ============================================================ */
+.header {
+  position: relative;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.header__glow {
+  position: absolute;
+  top: -40px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 80px;
+  background: radial-gradient(ellipse, rgba(0,229,192,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.header__inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header__logo {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--accent);
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+.header__logo-bracket { color: var(--text-muted); }
+.header__logo-cpu {
+  background: linear-gradient(135deg, var(--accent), #00b8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header__text     { flex: 1; }
+.header__title    { font-family: var(--font-display); font-size: 20px; font-weight: 800; letter-spacing: -.3px; line-height: 1.2; }
+.header__subtitle { font-size: 11px; color: var(--text-secondary); letter-spacing: 1.5px; margin-top: 3px; text-transform: uppercase; }
+
+.header__badge {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 1.5px;
+}
+
+
+/* ============================================================
+   PAGE LAYOUT  — sidebar + main
+   ============================================================ */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: calc(100vh - 65px);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+
+/* ============================================================
+   SIDEBAR / CONTROL PANEL
+   ============================================================ */
+.sidebar {
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: calc(100vh - 65px);
+  position: sticky;
+  top: 0;
+}
+
+/* generic card used inside sidebar */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  transition: var(--transition);
+  box-shadow: var(--shadow-card);
+}
+.card:hover { border-color: var(--border-glow); }
+
+/* card section label */
+.card__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+
+/* ── form elements ── */
+.form-stack  { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.form-field  { display: flex; flex-direction: column; gap: 5px; }
+.form-label  { font-size: 10px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+
+.form-input {
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: var(--transition);
+  width: 100%;
+  -moz-appearance: textfield;
+}
+.form-input::-webkit-inner-spin-button,
+.form-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,229,192,.08); }
+
+
+/* ── toggle row ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.toggle-row__label { font-size: 12px; color: var(--text-secondary); letter-spacing: .5px; }
+
+.toggle {
+  position: relative;
+  width: 44px; height: 24px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle__track {
+  position: absolute;
+  inset: 0;
+  background: var(--border);
+  border-radius: 12px;
+  transition: var(--transition);
+}
+.toggle__track::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+.toggle input:checked ~ .toggle__track { background: var(--accent); }
+.toggle input:checked ~ .toggle__track::before { transform: translateX(20px); background: var(--bg-base); }
+
+
+/* ── buttons ── */
+.btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.btn--generate {
+  background: var(--accent-glow);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  text-shadow: 0 0 8px rgba(0,229,192,.6);
+}
+.btn--generate:hover {
+  background: rgba(0,229,192,.22);
+  box-shadow: 0 0 24px rgba(0,229,192,.4);
+  transform: translateY(-1px);
+}
+
+.btn--run {
+  background: linear-gradient(135deg, #22c55e22, #16a34a33);
+  border-color: var(--color-running);
+  color: var(--color-running);
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(34,197,94,.6);
+  margin-top: 8px;
+}
+.btn--run:hover:not(:disabled) {
+  background: rgba(34,197,94,.22);
+  box-shadow: 0 0 24px rgba(34,197,94,.4);
+  transform: translateY(-1px);
+}
+.btn--run:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+
+
+/* ── process mini-list ── */
+.proc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.proc-list__empty {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-align: center;
+  padding: 16px 0;
+  letter-spacing: .5px;
+}
+
+.proc-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  animation: slideIn .2s ease;
+}
+@keyframes slideIn {
+  from { opacity:0; transform:translateX(-8px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+.proc-pill__pid  { font-size:11px; font-weight:700; color:var(--accent); min-width:28px; }
+.proc-pill__info { font-size:10px; color:var(--text-secondary); flex:1; padding:0 8px; }
+.proc-pill__dot  { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+
+/* ── algo tag list (sidebar) ── */
+.algo-list { display:flex; flex-direction:column; gap:5px; }
+.algo-tag {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+.algo-tag span { font-size: 9px; opacity: .5; }
+.algo-tag.is-active { border-color: var(--accent); color: var(--accent); }
+
+
+/* ============================================================
+   MAIN / VISUALISATION PANEL
+   ============================================================ */
+.main {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+
+/* ── shared section card ── */
+.section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.section-card--hidden { display: none; }
+
+.section-card.is-visible {
+  display: block;
+  animation: fadeUp .4s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* section header row */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-head__title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.section-head__badge { font-size: 10px; color: var(--text-secondary); letter-spacing: 1px; }
+
+
+/* ── AI result banner ── */
+.result-banner {
+  text-align: center;
+}
+.result-banner__crown { font-size: 28px; margin-bottom: 8px; }
+.result-banner__name  {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0,229,192,.4);
+  letter-spacing: -1px;
+}
+.result-banner__sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.result-banner__scores {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.score-chip {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--bg-base);
+}
+.score-chip strong { color: var(--accent); font-weight: 700; }
+
+
+/* ── tables (shared) ── */
+.table-scroll { overflow-x: auto; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.data-table thead th {
+  background: var(--bg-base);
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+.data-table tbody tr:hover { background: rgba(255,255,255,.02); }
+.data-table tbody td {
+  padding: 9px 14px;
+  text-align: center;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+.data-table tbody td:first-child { font-weight: 700; color: var(--accent); }
+.data-table tbody tr:last-child   { border-bottom: none; }
+
+/* comparison table best row */
+.data-table tbody tr.is-best { background: var(--accent-glow); }
+.data-table tbody tr.is-best td { color: var(--accent); font-weight: 700; }
+
+
+/* ── Gantt chart ── */
+.gantt-scroll { overflow-x: auto; padding-bottom: 6px; }
+
+.gantt-chart {
+  display: flex;
+  height: 48px;
+  min-width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.gantt-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-right: 2px solid var(--bg-base);
+  cursor: default;
+  position: relative;
+  min-width: 32px;
+  transition: opacity .2s;
+}
+.gantt-block:hover { opacity: .85; }
+.gantt-block--idle { background: #1e2535; color: var(--text-muted); }
+
+.gantt-timeline { display: flex; font-size: 10px; color: var(--text-muted); letter-spacing: .5px; }
+.gantt-tick {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-left: 1px solid var(--border);
+  padding: 2px 3px;
+  min-width: 32px;
+}
+
+
+/* ── metrics averages row ── */
+.avg-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.avg-card {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  align-items: center;
+  text-align: center;
+  transition: var(--transition);
+}
+.avg-card:hover { border-color: var(--border-glow); box-shadow: 0 0 14px rgba(0,229,192,.08); }
+.avg-card__label { font-size: 9px; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; }
+.avg-card__value { font-size: 22px; font-family: var(--font-display); font-weight: 700; color: var(--accent); }
+
+
+/* ── sub-section heading inside metrics ── */
+.sub-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+
+/* ============================================================
+   PROCESS COLOUR PALETTE
+   ============================================================ */
+.pc-0{background:rgba(34,197,94,.65);color:#fff}   .pd-0{background:#22c55e}
+.pc-1{background:rgba(56,189,248,.65);color:#fff}  .pd-1{background:#38bdf8}
+.pc-2{background:rgba(168,85,247,.65);color:#fff}  .pd-2{background:#a855f7}
+.pc-3{background:rgba(249,115,22,.65);color:#fff}  .pd-3{background:#f97316}
+.pc-4{background:rgba(236,72,153,.65);color:#fff}  .pd-4{background:#ec4899}
+.pc-5{background:rgba(234,179,8,.65);color:#fff}   .pd-5{background:#eab308}
+.pc-6{background:rgba(20,184,166,.65);color:#fff}  .pd-6{background:#14b8a6}
+.pc-7{background:rgba(139,92,246,.65);color:#fff}  .pd-7{background:#8b5cf6}
+.pc-8{background:rgba(239,68,68,.65);color:#fff}   .pd-8{background:#ef4444}
+.pc-9{background:rgba(16,185,129,.65);color:#fff}  .pd-9{background:#10b981}
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     BACKGROUND  (fixed, behind everything, pointer-events: none)
+     ============================================================ -->
+<div class="bg" aria-hidden="true">
+  <div class="bg__grid"></div>               <!-- dim static grid -->
+  <div class="bg__grid-glow" id="bgGridGlow"></div>  <!-- mouse-lit grid -->
+  <div class="bg__orb bg__orb--1"></div>     <!-- ambient orb top-left -->
+  <div class="bg__orb bg__orb--2"></div>     <!-- ambient orb bottom-right -->
+  <div class="bg__orb bg__orb--3"></div>     <!-- ambient orb mid-right -->
+  <div class="bg__orb bg__orb--4"></div>     <!-- ambient orb bottom-left -->
+</div><!-- /bg -->
+
+<!-- ============================================================
+     CURSOR  (fixed, z-index: 9999, pointer-events: none)
+     ============================================================ -->
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>  <!-- soft ambient blob -->
+<div class="cursor"      id="cursor"     aria-hidden="true"></div>   <!-- ring + centre dot -->
+
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="header">
+
+  <!-- decorative top-centre glow — purely visual -->
+  <div class="header__glow" aria-hidden="true"></div>
+
+  <!-- constrained inner row: logo · title block · status badge -->
+  <div class="header__inner">
+
+    <!-- logo mark  [ CPU ] -->
+    <div class="header__logo" aria-label="CPU">
+      <span class="header__logo-bracket">[</span>
+      <span class="header__logo-cpu">CPU</span>
+      <span class="header__logo-bracket">]</span>
+    </div><!-- /header__logo -->
+
+    <!-- site title + subtitle -->
+    <div class="header__text">
+      <div class="header__title">AI Scheduler</div>
+      <div class="header__subtitle">Intelligent CPU Process Optimizer &nbsp;·&nbsp; v2.0</div>
+    </div><!-- /header__text -->
+
+    <!-- live status badge (IDLE / RUNNING / DONE — set via JS) -->
+    <div class="header__badge" id="headerBadge">IDLE</div>
+
+  </div><!-- /header__inner -->
+
+</header><!-- /header -->
+
+
+<!-- ============================================================
+     PAGE LAYOUT  — sidebar (fixed left) + scrollable main
+     ============================================================ -->
+<div class="layout">
+
+  <!-- ─────────────────────────────────────────────────────────
+       SIDEBAR  — controls, process queue, algorithm list
+       ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- ── Configuration card ── -->
+    <div class="card">
+      <div class="card__label">Configuration</div>
+
+      <div class="form-stack">
+        <div class="form-field">
+          <label class="form-label" for="numProc">Number of Processes</label>
+          <input class="form-input" type="number" id="numProc" min="1" max="10" value="5" />
+        </div>
+      </div><!-- /form-stack -->
+
+      <div class="toggle-row">
+        <span class="toggle-row__label">Priority Scheduling</span>
+        <label class="toggle" for="priorityToggle">
+          <input type="checkbox" id="priorityToggle" />
+          <span class="toggle__track"></span>
+        </label>
+      </div><!-- /toggle-row -->
+
+      <button class="btn btn--generate" onclick="generateProcesses()">⚡ Generate Processes</button>
+      <button class="btn btn--run" id="runBtn" onclick="runAIScheduler()" disabled>▶ Run AI Scheduler</button>
+    </div><!-- /card: Configuration -->
+
+    <!-- ── Process Queue card ── -->
+    <div class="card">
+      <div class="card__label">Process Queue</div>
+      <div class="proc-list" id="procList">
+        <div class="proc-list__empty">No processes generated yet</div>
+      </div><!-- /proc-list -->
+    </div><!-- /card: Process Queue -->
+
+    <!-- ── Algorithms card ── -->
+    <div class="card">
+      <div class="card__label">Algorithms</div>
+      <div class="algo-list">
+        <div class="algo-tag" id="tag-fcfs">FCFS &nbsp;<span>First Come First Served</span></div>
+        <div class="algo-tag" id="tag-srtf">SRTF &nbsp;<span>Shortest Remaining Time</span></div>
+        <div class="algo-tag" id="tag-rr">RR &nbsp;<span>Round Robin (q=2)</span></div>
+        <div class="algo-tag" id="tag-sjf">SJF &nbsp;<span>Shortest Job First</span></div>
+        <div class="algo-tag" id="tag-priority" style="display:none">PRIORITY &nbsp;<span>Preemptive</span></div>
+      </div><!-- /algo-list -->
+    </div><!-- /card: Algorithms -->
+
+  </aside><!-- /sidebar -->
+
+
+  <!-- ─────────────────────────────────────────────────────────
+       MAIN  — result banner, process table, gantt, metrics
+       ───────────────────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- ── 1. AI result banner ── -->
+    <div class="section-card section-card--hidden" id="cardResult">
+      <div class="result-banner">
+        <div class="result-banner__crown">🏆</div>
+        <div class="result-banner__name" id="resultName">—</div>
+        <div class="result-banner__sub">Best Algorithm Selected by AI</div>
+        <div class="result-banner__scores" id="resultScores"></div>
+      </div><!-- /result-banner -->
+    </div><!-- /cardResult -->
+
+    <!-- ── 2. Generated processes table ── -->
+    <div class="section-card section-card--hidden" id="cardProcesses">
+      <div class="section-head">
+        <div class="section-head__title">Generated Processes</div>
+        <div class="section-head__badge" id="procBadge"></div>
+      </div><!-- /section-head -->
+      <div class="table-scroll">
+        <table class="data-table" id="procTable">
+          <thead><tr id="procTableHead"></tr></thead>
+          <tbody id="procTableBody"></tbody>
+        </table>
+      </div><!-- /table-scroll -->
+    </div><!-- /cardProcesses -->
+
+    <!-- ── 3. Gantt chart ── -->
+    <div class="section-card section-card--hidden" id="cardGantt">
+      <div class="section-head">
+        <div class="section-head__title">Gantt Chart</div>
+        <div class="section-head__badge" id="ganttLabel"></div>
+      </div><!-- /section-head -->
+      <div class="gantt-scroll">
+        <div class="gantt-chart"    id="ganttChart"></div>
+        <div class="gantt-timeline" id="ganttTimeline"></div>
+      </div><!-- /gantt-scroll -->
+    </div><!-- /cardGantt -->
+
+    <!-- ── 4. Performance metrics ── -->
+    <div class="section-card section-card--hidden" id="cardMetrics">
+
+      <div class="section-head">
+        <div class="section-head__title">Performance Metrics</div>
+      </div><!-- /section-head -->
+
+      <!-- averages row -->
+      <div class="avg-row" id="avgRow"></div>
+
+      <!-- algorithm comparison table -->
+      <div class="sub-title">Algorithm Comparison</div>
+      <div class="table-scroll" style="margin-bottom:16px">
+        <table class="data-table" id="compareTable">
+          <thead>
+            <tr>
+              <th>Algorithm</th>
+              <th>Avg TAT</th>
+              <th>Avg WT</th>
+              <th>Avg RT</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="compareBody"></tbody>
+        </table>
+      </div><!-- /table-scroll: comparison -->
+
+      <!-- per-process results table -->
+      <div class="sub-title">Per-Process Results</div>
+      <div class="table-scroll">
+        <table class="data-table" id="perProcTable">
+          <thead><tr id="perProcHead"></tr></thead>
+          <tbody id="perProcBody"></tbody>
+        </table>
+      </div><!-- /table-scroll: per-process -->
+
+    </div><!-- /cardMetrics -->
+
+  </main><!-- /main -->
+
+</div><!-- /layout -->
+
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+
+/* ── Cursor tracking ─────────────────────────────────────── */
+const cursorEl  = document.getElementById('cursor');
+const glowEl    = document.getElementById('cursorGlow');
+const gridGlow  = document.getElementById('bgGridGlow');
+
+document.addEventListener('mousemove', e => {
+  const x = e.clientX, y = e.clientY;
+
+  cursorEl.style.left = x + 'px';
+  cursorEl.style.top  = y + 'px';
+  glowEl.style.left   = x + 'px';
+  glowEl.style.top    = y + 'px';
+
+  /* update CSS vars for the masked grid glow */
+  const pctX = (x / window.innerWidth  * 100).toFixed(2) + '%';
+  const pctY = (y / window.innerHeight * 100).toFixed(2) + '%';
+  gridGlow.style.setProperty('--mx', pctX);
+  gridGlow.style.setProperty('--my', pctY);
+});
+
+document.addEventListener('mousedown', () => cursorEl.classList.add('is-clicking'));
+document.addEventListener('mouseup',   () => cursorEl.classList.remove('is-clicking'));
+
+
+/* ── State ───────────────────────────────────────────────── */
+let processes  = [];
+let priorityOn = false;
+
+document.getElementById('priorityToggle').addEventListener('change', e => {
+  priorityOn = e.target.checked;
+  document.getElementById('tag-priority').style.display = priorityOn ? 'block' : 'none';
+});
+
+
+/* ── Helpers ─────────────────────────────────────────────── */
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function showCard(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('section-card--hidden');
+  el.classList.add('is-visible');
+}
+
+function hideCard(id) {
+  const el = document.getElementById(id);
+  el.classList.add('section-card--hidden');
+  el.classList.remove('is-visible');
+}
+
+
+/* ── Generate processes ──────────────────────────────────── */
+function generateProcesses() {
+  const n = Math.max(1, Math.min(10, parseInt(document.getElementById('numProc').value) || 5));
+  priorityOn = document.getElementById('priorityToggle').checked;
+
+  const prios = Array.from({length: n}, (_, i) => i + 1).sort(() => Math.random() - .5);
+  processes = Array.from({length: n}, (_, i) => ({
+    pid:      `P${i + 1}`,
+    arrival:  rand(0, 10),
+    burst:    rand(1, 10),
+    priority: prios[i],
+    ci:       i % 10
+  }));
+
+  renderProcList();
+  renderProcTable();
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('headerBadge').textContent = 'READY';
+
+  /* hide output cards until next run */
+  hideCard('cardResult');
+  hideCard('cardGantt');
+  hideCard('cardMetrics');
+}
+
+
+/* ── Render sidebar mini-list ────────────────────────────── */
+function renderProcList() {
+  const el = document.getElementById('procList');
+  if (!processes.length) {
+    el.innerHTML = '<div class="proc-list__empty">No processes generated yet</div>';
+    return;
+  }
+  el.innerHTML = processes.map(p => `
+    <div class="proc-pill">
+      <span class="proc-pill__pid">${p.pid}</span>
+      <span class="proc-pill__info">AT:${p.arrival} BT:${p.burst}${priorityOn ? ' PR:' + p.priority : ''}</span>
+      <span class="proc-pill__dot pd-${p.ci}"></span>
+    </div>`).join('');
+}
+
+
+/* ── Render process table ────────────────────────────────── */
+function renderProcTable() {
+  showCard('cardProcesses');
+  document.getElementById('procBadge').textContent = processes.length + ' processes';
+
+  const cols = ['PID', 'Arrival Time', 'Burst Time', ...(priorityOn ? ['Priority'] : [])];
+  document.getElementById('procTableHead').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
+  document.getElementById('procTableBody').innerHTML = processes.map(p => `
+    <tr>
+      <td>${p.pid}</td>
+      <td>${p.arrival}</td>
+      <td>${p.burst}</td>
+      ${priorityOn ? `<td>${p.priority}</td>` : ''}
+    </tr>`).join('');
+}
+
+
+/* ── Scheduling algorithms ───────────────────────────────── */
+function deepCopy(arr) { return arr.map(p => ({...p, remaining: p.burst})); }
+
+function computeMetrics(procs, gantt) {
+  const firstStart = {}, lastEnd = {};
+  for (const g of gantt) {
+    if (g.pid === 'IDLE') continue;
+    if (firstStart[g.pid] === undefined) firstStart[g.pid] = g.start;
+    lastEnd[g.pid] = g.end;
+  }
+  const tat = {}, wt = {}, rt = {};
+  for (const p of procs) {
+    tat[p.pid] = (lastEnd[p.pid] ?? p.arrival) - p.arrival;
+    wt[p.pid]  = tat[p.pid] - p.burst;
+    rt[p.pid]  = (firstStart[p.pid] ?? p.arrival) - p.arrival;
+  }
+  const n = procs.length;
+  return {
+    avgTat: procs.reduce((s, p) => s + tat[p.pid], 0) / n,
+    avgWt:  procs.reduce((s, p) => s + wt[p.pid],  0) / n,
+    avgRt:  procs.reduce((s, p) => s + rt[p.pid],  0) / n,
+    tat, wt, rt
+  };
+}
+
+function mergeGantt(gantt) {
+  const out = [];
+  for (const g of gantt) {
+    const last = out[out.length - 1];
+    if (last && last.pid === g.pid && last.end === g.start) last.end = g.end;
+    else out.push({...g});
+  }
+  return out;
+}
+
+/* FCFS */
+function fcfs(procs) {
+  const ps = deepCopy(procs).sort((a, b) => a.arrival - b.arrival);
+  let t = 0, gantt = [];
+  for (const p of ps) {
+    if (t < p.arrival) { gantt.push({pid:'IDLE', start:t, end:p.arrival}); t = p.arrival; }
+    gantt.push({pid:p.pid, start:t, end:t + p.burst});
+    t += p.burst;
+  }
+  return { gantt, metrics: computeMetrics(procs, gantt) };
+}
+
+/* SRTF */
+function srtf(procs) {
+  const ps = deepCopy(procs);
+  const maxT = procs.reduce((s, p) => s + p.burst, 0) + Math.max(...procs.map(p => p.arrival));
+  let t = 0, done = 0, raw = [], last = null, lastStart = 0;
+  while (done < procs.length && t < maxT + 5) {
+    const avail = ps.filter(p => p.arrival <= t && p.remaining > 0);
+    if (!avail.length) { if (last) { raw.push({pid:last.pid,start:lastStart,end:t}); last=null; } t++; continue; }
+    const cur = avail.reduce((b, p) => p.remaining < b.remaining ? p : b);
+    if (!last || last.pid !== cur.pid) {
+      if (last) raw.push({pid:last.pid, start:lastStart, end:t});
+      lastStart = t; last = cur;
+    }
+    cur.remaining--; t++;
+    if (cur.remaining === 0) { done++; raw.push({pid:cur.pid,start:lastStart,end:t}); lastStart=t; last=null; }
+  }
+  if (last) raw.push({pid:last.pid, start:lastStart, end:t});
+  const gantt = mergeGantt(raw);
+  return { gantt, metrics: computeMetrics(procs, gantt) };
+}
+
+/* Round Robin q=2 */
+function roundRobin(procs) {
+  const ps = deepCopy(procs).sort((a, b) => a.arrival - b.arrival);
+  let t = 0, queue = [], idx = 0, done = 0, gantt = [], q = 2;
+  while (done < procs.length) {
+    while (idx < ps.length && ps[idx].arrival <= t) queue.push(ps[idx++]);
+    if (!queue.length) { t = ps[idx]?.arrival || t + 1; continue; }
+    const p = queue.shift();
+    const run = Math.min(q, p.remaining);
+    gantt.push({pid:p.pid, start:t, end:t+run});
+    t += run; p.remaining -= run;
+    while (idx < ps.length && ps[idx].arrival <= t) queue.push(ps[idx++]);
+    if (p.remaining > 0) queue.push(p); else done++;
+  }
+  return { gantt, metrics: computeMetrics(procs, gantt) };
+}
+
+/* SJF (non-preemptive) */
+function sjf(procs) {
+  const ps = deepCopy(procs);
+  const visited = new Array(ps.length).fill(false);
+  let t = 0, done = 0, gantt = [];
+  while (done < ps.length) {
+    const avail = ps.map((p,i) => ({...p,i})).filter(p => p.arrival <= t && !visited[p.i]);
+    if (!avail.length) { t++; continue; }
+    const cur = avail.reduce((b, p) => p.burst < b.burst ? p : b);
+    gantt.push({pid:cur.pid, start:t, end:t+cur.burst});
+    t += cur.burst; visited[cur.i] = true; done++;
+  }
+  return { gantt, metrics: computeMetrics(procs, gantt) };
+}
+
+/* Priority (preemptive) */
+function prioritySched(procs) {
+  const ps = deepCopy(procs);
+  const maxT = procs.reduce((s,p) => s+p.burst, 0) + Math.max(...procs.map(p=>p.arrival));
+  let t = 0, done = 0, raw = [], last = null, lastStart = 0;
+  while (done < procs.length && t < maxT + 5) {
+    const avail = ps.filter(p => p.arrival <= t && p.remaining > 0);
+    if (!avail.length) { if (last) { raw.push({pid:last.pid,start:lastStart,end:t}); last=null; } t++; continue; }
+    const cur = avail.reduce((b,p) => p.priority < b.priority ? p : b);
+    if (!last || last.pid !== cur.pid) {
+      if (last) raw.push({pid:last.pid,start:lastStart,end:t});
+      lastStart = t; last = cur;
+    }
+    cur.remaining--; t++;
+    if (cur.remaining===0) { done++; raw.push({pid:cur.pid,start:lastStart,end:t}); lastStart=t; last=null; }
+  }
+  if (last) raw.push({pid:last.pid,start:lastStart,end:t});
+  const gantt = mergeGantt(raw);
+  return { gantt, metrics: computeMetrics(procs, gantt) };
+}
+
+
+/* ── AI scoring ──────────────────────────────────────────── */
+function variance(arr) {
+  const m = arr.reduce((a,b) => a+b, 0) / arr.length;
+  return arr.reduce((s,x) => s+(x-m)**2, 0) / arr.length;
+}
+
+function runAIScheduler() {
+  if (!processes.length) return;
+  document.getElementById('headerBadge').textContent = 'RUNNING';
+
+  /* highlight active algo tags */
+  ['fcfs','srtf','rr','sjf','priority'].forEach(k =>
+    document.getElementById('tag-' + k)?.classList.remove('is-active'));
+
+  if (priorityOn) {
+    const res = prioritySched(processes);
+    document.getElementById('tag-priority').classList.add('is-active');
+    renderResult('Priority', res.metrics);
+    renderGantt(res.gantt, 'Priority');
+    renderMetrics(res.metrics, {Priority: res}, 'Priority');
+    document.getElementById('headerBadge').textContent = 'DONE';
+    return;
+  }
+
+  const results = { FCFS: fcfs(processes), SRTF: srtf(processes), 'Round Robin': roundRobin(processes), SJF: sjf(processes) };
+  const vals = Object.values(results);
+  const maxTat = Math.max(...vals.map(r => r.metrics.avgTat));
+  const maxWt  = Math.max(...vals.map(r => r.metrics.avgWt));
+  const maxRt  = Math.max(...vals.map(r => r.metrics.avgRt));
+
+  let best = null, bestScore = Infinity;
+  for (const [name, res] of Object.entries(results)) {
+    const nTat = maxTat ? res.metrics.avgTat / maxTat : 0;
+    const nWt  = maxWt  ? res.metrics.avgWt  / maxWt  : 0;
+    const nRt  = maxRt  ? res.metrics.avgRt  / maxRt  : 0;
+    const fair = variance(Object.values(res.metrics.wt));
+    res.score  = nTat + nWt + nRt + fair * 0.3;
+    if (res.score < bestScore) { bestScore = res.score; best = name; }
+  }
+
+  /* light up the winning tag */
+  const tagMap = { FCFS:'fcfs', SRTF:'srtf', 'Round Robin':'rr', SJF:'sjf' };
+  document.getElementById('tag-' + tagMap[best])?.classList.add('is-active');
+
+  renderResult(best, results[best].metrics);
+  renderGantt(results[best].gantt, best);
+  renderMetrics(results[best].metrics, results, best);
+  document.getElementById('headerBadge').textContent = 'DONE';
+}
+
+
+/* ── Render helpers ──────────────────────────────────────── */
+function pidColor(pid) {
+  const p = processes.find(p => p.pid === pid);
+  return p ? p.ci : 0;
+}
+
+function renderResult(name, m) {
+  document.getElementById('resultName').textContent = name;
+  document.getElementById('resultScores').innerHTML = [
+    ['Avg TAT', m.avgTat.toFixed(2)],
+    ['Avg WT',  m.avgWt.toFixed(2)],
+    ['Avg RT',  m.avgRt.toFixed(2)],
+    ['Score',   (m.avgTat + m.avgWt + m.avgRt).toFixed(2)]
+  ].map(([l,v]) => `<div class="score-chip">${l} <strong>${v}</strong></div>`).join('');
+  showCard('cardResult');
+}
+
+function renderGantt(gantt, label) {
+  const total = gantt[gantt.length - 1]?.end || 1;
+  document.getElementById('ganttLabel').textContent = label;
+  document.getElementById('ganttChart').innerHTML = gantt.map(g => {
+    const w = ((g.end - g.start) / total * 100).toFixed(2) + '%';
+    if (g.pid === 'IDLE') return `<div class="gantt-block gantt-block--idle" style="width:${w}">–</div>`;
+    return `<div class="gantt-block pc-${pidColor(g.pid)}" style="width:${w}" title="${g.pid}: ${g.start}–${g.end}">${g.pid}</div>`;
+  }).join('');
+  document.getElementById('ganttTimeline').innerHTML = Array.from({length: total + 1}, (_, t) => {
+    const w = (1 / total * 100).toFixed(2) + '%';
+    return `<div class="gantt-tick" style="width:${w}">${t}</div>`;
+  }).join('');
+  showCard('cardGantt');
+}
+
+function renderMetrics(m, allResults, best) {
+  /* averages */
+  document.getElementById('avgRow').innerHTML = [
+    ['Avg Turnaround', m.avgTat.toFixed(2)],
+    ['Avg Waiting',    m.avgWt.toFixed(2)],
+    ['Avg Response',   m.avgRt.toFixed(2)]
+  ].map(([l,v]) => `
+    <div class="avg-card">
+      <div class="avg-card__label">${l}</div>
+      <div class="avg-card__value">${v}</div>
+    </div>`).join('');
+
+  /* comparison table */
+  document.getElementById('compareBody').innerHTML = Object.entries(allResults).map(([name, res]) => {
+    const isBest = name === best;
+    const score  = (res.metrics.avgTat + res.metrics.avgWt + res.metrics.avgRt).toFixed(2);
+    return `<tr class="${isBest ? 'is-best' : ''}">
+      <td>${isBest ? '🏆 ' : ''}${name}</td>
+      <td>${res.metrics.avgTat.toFixed(2)}</td>
+      <td>${res.metrics.avgWt.toFixed(2)}</td>
+      <td>${res.metrics.avgRt.toFixed(2)}</td>
+      <td>${score}</td>
+    </tr>`;
+  }).join('');
+
+  /* per-process table */
+  document.getElementById('perProcHead').innerHTML = ['PID','TAT','WT','RT'].map(c => `<th>${c}</th>`).join('');
+  document.getElementById('perProcBody').innerHTML = processes.map(p => `
+    <tr>
+      <td>${p.pid}</td>
+      <td>${m.tat[p.pid]}</td>
+      <td>${m.wt[p.pid]}</td>
+      <td>${m.rt[p.pid]}</td>
+    </tr>`).join('');
+
+  showCard('cardMetrics');
+}
+
+</script>
+</body>
+</html>
